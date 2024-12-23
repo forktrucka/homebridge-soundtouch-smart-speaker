@@ -1,0 +1,29 @@
+{
+    "trailingComma": "es5",
+    "tabWidth": 4,
+    "semi": false,
+    "singleQuote": true,
+    "overrides": [
+        {
+            "files": ["*.ts", "*.js"],
+            "options": {
+                "semi": true
+            }
+        },
+        {
+            "files": ["*.json"],
+            "options": {
+                "trailingComma": "none",
+                "semi": true,
+                "singleQuote": false,
+                "tabWidth": 2
+            }
+        },
+        {
+            "files": [".github/**/*.yml"],
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
+}

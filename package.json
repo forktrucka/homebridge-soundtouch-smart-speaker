@@ -1,22 +1,25 @@
 {
-  "name": "homebridge-plugin-name",
-  "displayName": "Plugin Name",
+  "name": "homebridge-soundtouch-smart-speaker",
+  "displayName": "Soundtouch Smart Speaker",
+  "packageManager": "yarn@4.5.3",
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "A short description about what your plugin does.",
-  "author": "Your Name",
+  "description": "Forks and fixes homebridge-soundtouch-platform.",
+  "author": "Andrew Trainor",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/USERNAME/GITHUB_PROJECT_NAME#readme",
+  "homepage": "https://github.com/forktrucka/soundtouch-smart-speaker#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/forktrucka/soundtouch-smart-speaker.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/forktrucka/soundtouch-smart-speaker/issues"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "bose",
+    "soundtouch"
   ],
   "main": "dist/index.js",
   "engines": {
@@ -24,24 +27,39 @@
     "homebridge": "^1.8.0 || ^2.0.0-beta.0"
   },
   "scripts": {
-    "build": "rimraf ./dist && tsc",
-    "lint": "eslint . --max-warnings=0",
-    "prepublishOnly": "npm run lint && npm run build",
-    "watch": "npm run build && npm link && nodemon"
+    "clean": "rimraf ./dist",
+    "postinstall": "husky",
+    "prepare": "husky",
+    "build": "yarn clean && tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --max-warnings=0 --fix .",
+    "format": "prettier --write .",
+    "prepublishOnly": "yarn lint && yarn build",
+    "watch": "yarn build && yarn link && yarn nodemon"
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.8.6",
     "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
     "homebridge": "^2.0.0-beta.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
     "nodemon": "^3.1.7",
+    "prettier": "3.4.2",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.12.2"
   },
   "dependencies": {
-    "homebridge-lib": "^7.1.0"
+    "homebridge-base-platform": "^1.4.4",
+    "homebridge-lib": "^7.1.0",
+    "soundtouch-api": "^2.0.0"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown",
+    "**/*": "eslint --fix"
   }
 }
