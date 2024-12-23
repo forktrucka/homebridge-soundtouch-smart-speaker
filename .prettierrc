@@ -7,7 +7,10 @@
         {
             "files": ["*.ts", "*.js"],
             "options": {
-                "semi": true
+                "semi": true,
+                "bracketSameLine": false,
+                "bracketSpacing": true,
+                "tabWidth": 2
             }
         },
         {

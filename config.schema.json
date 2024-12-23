@@ -1,16 +1,160 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "SoundTouchHomebridgePlugin",
   "pluginType": "platform",
   "singular": true,
   "strictValidation": false,
   "schema": {
     "type": "object",
     "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string",
-        "required": true,
-        "default": "Example Dynamic Platform"
+      "discoverAllAccessories": {
+        "title": "Discover all accessories",
+        "type": "boolean",
+        "default": false,
+        "required": false
+      },
+      "global": {
+        "type": "object",
+        "properties": {
+          "pollingInterval": {
+            "type": "number",
+            "placeholder": "2000"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "verbose": {
+            "type": "boolean",
+            "default": false
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "index": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 6,
+                  "required": true
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true,
+                  "required": false
+                }
+              }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "required": true
+                },
+                "account": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "accessories": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "room": {
+              "type": "string"
+            },
+            "pollingInterval": {
+              "type": "integer",
+              "default": 2000
+            },
+            "ip": {
+              "type": "string"
+            },
+            "volume": {
+              "type": "object",
+              "properties": {
+                "unmuteValue": {
+                  "type": "integer"
+                },
+                "maxValue": {
+                  "type": "integer"
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": ["none", "lightbulb", "speaker"]
+                }
+              }
+            },
+            "presets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6,
+                    "required": true
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "required": false
+                  }
+                }
+              }
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "required": true
+                  },
+                  "account": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
