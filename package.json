@@ -2,8 +2,7 @@
   "name": "homebridge-soundtouchspeaker",
   "displayName": "SoundTouch Smart Speaker",
   "type": "module",
-  "version": "1.0.0",
-  "private": true,
+  "version": "0.1.1-beta.0",
   "description": "Updates homebridge-soundtouch-platform to work on latest homebridge.",
   "author": "Andrew Trainor",
   "license": "Apache-2.0",
@@ -27,8 +26,6 @@
   },
   "scripts": {
     "clean": "rimraf ./dist",
-    "postinstall": "husky",
-    "prepare": "husky",
     "build": "npm run clean && tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --max-warnings=0 --fix .",
@@ -39,7 +36,7 @@
   "devDependencies": {
     "@eslint/js": "^9.14.0",
     "@types/eslint__js": "^8.42.3",
-    "@types/node": "^22.8.6",
+    "@types/node": "^17.0.21",
     "eslint": "^9.14.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",
@@ -50,12 +47,10 @@
     "prettier": "3.4.2",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3",
+    "typescript": "^4.6.2",
     "typescript-eslint": "^8.12.2",
     "@types/bonjour": "^3.5.10",
-    "@types/node": "^17.0.21",
-    "@types/xml2js": "^0.4.9",
-    "typescript": "^4.6.2"
+    "@types/xml2js": "^0.4.9"
   },
   "dependencies": {
     "axios": "^0.26.1",
