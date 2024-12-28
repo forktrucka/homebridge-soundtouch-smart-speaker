@@ -1,22 +1,24 @@
 {
-  "name": "homebridge-plugin-name",
-  "displayName": "Plugin Name",
+  "name": "homebridge-soundtouchspeaker",
+  "displayName": "SoundTouch Smart Speaker",
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "A short description about what your plugin does.",
-  "author": "Your Name",
+  "description": "Updates homebridge-soundtouch-platform to work on latest homebridge.",
+  "author": "Andrew Trainor",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/USERNAME/GITHUB_PROJECT_NAME#readme",
+  "homepage": "https://github.com/forktrucka/homebridge-soundtouch-smart-speaker#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/forktrucka/homebridge-soundtouch-smart-speaker.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/forktrucka/homebridge-soundtouch-smart-speaker/issues"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "bose",
+    "soundtouch"
   ],
   "main": "dist/index.js",
   "engines": {
@@ -24,8 +26,13 @@
     "homebridge": "^1.8.0 || ^2.0.0-beta.0"
   },
   "scripts": {
-    "build": "rimraf ./dist && tsc",
-    "lint": "eslint . --max-warnings=0",
+    "clean": "rimraf ./dist",
+    "postinstall": "husky",
+    "prepare": "husky",
+    "build": "npm run clean && tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --max-warnings=0 --fix .",
+    "format": "prettier --write .",
     "prepublishOnly": "npm run lint && npm run build",
     "watch": "npm run build && npm link && nodemon"
   },
@@ -34,14 +41,31 @@
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.8.6",
     "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
     "homebridge": "^2.0.0-beta.0",
-    "nodemon": "^3.1.7",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "nodemon": "^3.1.9",
+    "prettier": "3.4.2",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.12.2"
+    "typescript-eslint": "^8.12.2",
+    "@types/bonjour": "^3.5.10",
+    "@types/node": "^17.0.21",
+    "@types/xml2js": "^0.4.9",
+    "typescript": "^4.6.2"
   },
   "dependencies": {
-    "homebridge-lib": "^7.1.0"
+    "axios": "^0.26.1",
+    "bonjour": "^3.5.0",
+    "homebridge-base-platform": "^1.4.2",
+    "homebridge-lib": "^7.1.0",
+    "uuid": "^11.0.3",
+    "xml2js": "^0.4.23"
+  },
+  "lint-staged": {
+    "**/*": "eslint --fix"
   }
 }

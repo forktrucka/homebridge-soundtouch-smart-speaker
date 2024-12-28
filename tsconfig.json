@@ -1,10 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": [
-      "DOM",
-      "ES2022"
-    ],
+    "target": "ES2015",
+    "lib": ["DOM", "ES2022"],
     "rootDir": "src",
     "module": "ES2022",
     "moduleResolution": "node",
@@ -14,11 +11,8 @@
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "eslint.config.js",
-    "homebridge-ui",
-    "src"
-  ]
+  "include": ["eslint.config.js", "homebridge-ui", "src"]
 }
