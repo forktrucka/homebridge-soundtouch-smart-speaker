@@ -58,7 +58,6 @@ export function nowPlayingFromElement(
   if (
     !artElement ||
     !timeElement ||
-    !csiElement ||
     !deviceId ||
     !source ||
     !contentItemElement
