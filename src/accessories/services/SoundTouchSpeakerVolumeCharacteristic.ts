@@ -1,4 +1,4 @@
-import { SoundTouchService } from './ServiceType.js';
+import { SoundTouchSpeakerCharacteristic } from './ServiceType.js';
 import {
   Characteristic,
   CharacteristicValue,
@@ -10,9 +10,11 @@ import {
 import { SoundTouchDevice } from '../../devices/SoundTouch/SoundTouchDevice.js';
 import { SoundTouchHomebridgePlatform } from '../../platform.js';
 import { FormattedLogger } from '../../utils/FormattedLogger.js';
+import { VolumeMode } from '../../SoundTouchHomeBridgePlatformConfig.js';
 
-export class SoundTouchVolumeService implements SoundTouchService {
-  // private interaction?: InteractionStrategy;
+export class SoundTouchSpeakerVolumeCharacteristic
+  implements SoundTouchSpeakerCharacteristic
+{
   private service: Service;
   private platform: SoundTouchHomebridgePlatform;
   private log: FormattedLogger;
@@ -20,27 +22,40 @@ export class SoundTouchVolumeService implements SoundTouchService {
   private characteristic: Characteristic;
 
   constructor({
-    // interaction,
     service,
     platform,
     log,
     device,
+    speakerType,
   }: {
-    // interaction?: InteractionStrategy;
     accessory: PlatformAccessory;
     device: SoundTouchDevice;
     platform: SoundTouchHomebridgePlatform;
     service: Service;
     log: Logging;
+    speakerType: Omit<keyof VolumeMode, 'none'>;
   }) {
-    // this.interaction = interaction;
     this.service = service;
     this.platform = platform;
     this.device = device;
     this.log = FormattedLogger.create(log, device);
-    this.characteristic = this.service.getCharacteristic(
-      this.platform.Characteristic.Volume
-    );
+
+    if (speakerType === VolumeMode.none) {
+      throw new Error(
+        'Speaker type cannot be none for a volume characteristic to be used'
+      );
+    }
+
+    if (speakerType === VolumeMode.speaker) {
+      this.characteristic = this.service.getCharacteristic(
+        this.platform.Characteristic.Volume
+      );
+    } else {
+      this.characteristic = this.service.getCharacteristic(
+        this.platform.Characteristic.Brightness
+      );
+    }
+
     this.characteristic
       .onSet(this.setVolume.bind(this))
       .onGet(this.getVolume.bind(this));
@@ -54,6 +69,12 @@ export class SoundTouchVolumeService implements SoundTouchService {
   async refresh(): Promise<void> {
     const volume = await this.device.api.getVolume();
     const updatedVolume = volume?.actual ?? 0;
+
+    this.log.debug(
+      'current volume: %s. vs. actual: %s',
+      this.characteristic.value,
+      volume?.actual
+    );
 
     if (this.characteristic.value !== updatedVolume) {
       this.log.debug('volume: %s%', updatedVolume);
@@ -71,20 +92,19 @@ export class SoundTouchVolumeService implements SoundTouchService {
   async setVolume(value: CharacteristicValue): Promise<void> {
     this.log.debug('setting volume status');
     const volume = value as number;
-    const volumeCharacteristic = this.service.getCharacteristic(
-      this.platform.Characteristic.Volume
-    );
 
-    const secureVolume = this.secureVolume(volumeCharacteristic, {
+    this.log.debug('old - %s. new - %s', this.characteristic.value, volume);
+
+    const secureVolume = this.secureVolume(this.characteristic, {
       newValue: volume,
-      oldValue: (volumeCharacteristic.value as number) ?? 0,
+      oldValue: this.characteristic.value as number,
     });
 
-    if (secureVolume === undefined) {
+    if (secureVolume !== undefined) {
+      this.log.debug('no new volume');
+      await this.device.api.setVolume(secureVolume);
       return;
     }
-
-    volumeCharacteristic.updateValue(volume);
 
     await this.device.api.setVolume(volume);
   }
@@ -93,8 +113,10 @@ export class SoundTouchVolumeService implements SoundTouchService {
     characteristic: Characteristic,
     change: { newValue: number; oldValue: number }
   ): number | undefined {
-    const maxValue = characteristic.props.maxValue;
+    const maxValue = characteristic.props.maxValue; // 100
+
     if (change.newValue === maxValue && change.oldValue <= maxValue / 2) {
+      // old - 32, new - 32
       return Math.max(change.oldValue, this.device.volumeSettings.unmuteValue);
     }
     return undefined;
@@ -103,13 +125,13 @@ export class SoundTouchVolumeService implements SoundTouchService {
   static async create({
     ...props
   }: {
-    // type: SpeakerType;
     accessory: PlatformAccessory;
     device: SoundTouchDevice;
     platform: SoundTouchHomebridgePlatform;
     service: Service;
+    speakerType: Omit<keyof VolumeMode, 'none'>;
   }) {
-    return new SoundTouchVolumeService({
+    return new SoundTouchSpeakerVolumeCharacteristic({
       log: props.platform.log,
       ...props,
     });

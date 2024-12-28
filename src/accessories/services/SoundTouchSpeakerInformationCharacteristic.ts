@@ -1,10 +1,12 @@
-import { SoundTouchService } from './ServiceType.js';
+import { SoundTouchSpeakerCharacteristic } from './ServiceType.js';
 import { Logging, PlatformAccessory } from 'homebridge';
 import { SoundTouchDevice } from '../../devices/SoundTouch/SoundTouchDevice.js';
 import { SoundTouchHomebridgePlatform } from '../../platform.js';
 import { FormattedLogger } from '../../utils/FormattedLogger.js';
 
-export class SoundTouchInformationService implements SoundTouchService {
+export class SoundTouchSpeakerInformationCharacteristic
+  implements SoundTouchSpeakerCharacteristic
+{
   private platform: SoundTouchHomebridgePlatform;
   private accessory: PlatformAccessory;
   private device: SoundTouchDevice;
@@ -32,7 +34,10 @@ export class SoundTouchInformationService implements SoundTouchService {
       throw new Error('No information service found');
     }
     informationService
-      .setCharacteristic(this.platform.Characteristic.Name, this.device.name)
+      .setCharacteristic(
+        this.platform.Characteristic.Name,
+        `${this.device.name} Speaker`
+      )
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Bose')
       .setCharacteristic(this.platform.Characteristic.Model, this.device.model)
       .setCharacteristic(
@@ -51,8 +56,8 @@ export class SoundTouchInformationService implements SoundTouchService {
     accessory: PlatformAccessory;
     device: SoundTouchDevice;
     platform: SoundTouchHomebridgePlatform;
-  }): Promise<SoundTouchInformationService> {
+  }): Promise<SoundTouchSpeakerInformationCharacteristic> {
     const log = props.platform.log;
-    return new SoundTouchInformationService({ log, ...props });
+    return new SoundTouchSpeakerInformationCharacteristic({ log, ...props });
   }
 }

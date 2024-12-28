@@ -7,19 +7,20 @@ import {
 } from 'homebridge';
 import { SoundTouchDevice } from '../../devices/SoundTouch/SoundTouchDevice.js';
 import { SoundTouchHomebridgePlatform } from '../../platform.js';
-import { KeyValue, SourceStatus } from '../../devices/SoundTouch/api/index.js';
-import { SoundTouchService } from './ServiceType.js';
+import { KeyValue } from '../../devices/SoundTouch/api/index.js';
+import { SoundTouchSpeakerCharacteristic } from './ServiceType.js';
 import { FormattedLogger } from '../../utils/FormattedLogger.js';
 
 export type SpeakerStatus = 'on' | 'off' | 'unknown';
 
-export class SoundTouchOnService implements SoundTouchService {
+export class SoundTouchSpeakerOnCharacteristic
+  implements SoundTouchSpeakerCharacteristic
+{
   private readonly device: SoundTouchDevice;
   private readonly service: Service;
   private readonly log: FormattedLogger;
   private readonly platform: SoundTouchHomebridgePlatform;
   private characteristic: Characteristic;
-  private status: SpeakerStatus;
 
   constructor(props: {
     device: SoundTouchDevice;
@@ -31,7 +32,6 @@ export class SoundTouchOnService implements SoundTouchService {
     this.device = props.device;
     this.platform = props.platform;
     this.log = FormattedLogger.create(props.log, this.device);
-    this.status = 'unknown';
     this.characteristic = this.service.getCharacteristic(
       this.platform.Characteristic.On
     );
@@ -47,25 +47,28 @@ export class SoundTouchOnService implements SoundTouchService {
   }
 
   async refresh(): Promise<void> {
-    await this.checkIsOnStatus();
+    const isOn = await SoundTouchDevice.deviceIsOn(this.device);
+
+    if (isOn !== this.characteristic.value) {
+      this.characteristic.updateValue(isOn);
+    }
   }
 
   async setOn(value: CharacteristicValue): Promise<void> {
     const desiredPowerStatus = value as boolean;
 
-    this.log.debug(
-      `setting to: ${desiredPowerStatus} current status: ${this.status}`
-    );
-
     try {
-      if (desiredPowerStatus && this.status !== 'on') {
+      if (
+        desiredPowerStatus &&
+        this.characteristic.value !== desiredPowerStatus
+      ) {
         await this.device.api.pressKey(KeyValue.power);
-      } else if (!desiredPowerStatus && this.status !== 'off') {
+      } else if (
+        !desiredPowerStatus &&
+        this.characteristic.value !== desiredPowerStatus
+      ) {
         await this.device.api.pressKey(KeyValue.power);
       }
-
-      const playing = await this.device.api.getNowPlaying();
-      this.status = playing?.source === SourceStatus.standBy ? 'off' : 'on';
     } catch (e: unknown) {
       this.log.error('error setting on status', e);
       throw new this.platform.api.hap.HapStatusError(
@@ -78,27 +81,9 @@ export class SoundTouchOnService implements SoundTouchService {
   }
 
   async getOn(): Promise<CharacteristicValue> {
-    // const isOn = await SoundTouchDevice.deviceIsOn(this.device);
-    const isOn = this.status === 'on';
-
-    this.log.debug(`${isOn ? 'Is on' : 'Is off'}`);
+    const isOn = await SoundTouchDevice.deviceIsOn(this.device);
 
     return isOn;
-  }
-
-  private async checkIsOnStatus() {
-    const isOn = await SoundTouchDevice.deviceIsOn(this.device);
-    const newStatus = isOn ? 'on' : 'off';
-
-    if (newStatus !== this.status) {
-      this.log.debug(`updating status to '${newStatus}' from '${this.status}'`);
-      this.status = newStatus;
-      if (this.status === 'on') {
-        this.characteristic.updateValue(true);
-      } else if (this.status !== 'off') {
-        this.characteristic.updateValue(false);
-      }
-    }
   }
 
   static async create(props: {
@@ -106,8 +91,8 @@ export class SoundTouchOnService implements SoundTouchService {
     device: SoundTouchDevice;
     platform: SoundTouchHomebridgePlatform;
     service: Service;
-  }): Promise<SoundTouchOnService> {
-    return new SoundTouchOnService({
+  }): Promise<SoundTouchSpeakerOnCharacteristic> {
+    return new SoundTouchSpeakerOnCharacteristic({
       log: props.platform.log,
       ...props,
     });

@@ -10,6 +10,7 @@ export enum KeyValue {
   prevTrack = 'PREV_TRACK',
   nextTrack = 'NEXT_TRACK',
   power = 'POWER',
+  stop = 'STOP',
   mute = 'MUTE',
   shuffleOn = 'SHUFFLE_ON',
   shuffleOff = 'SHUFFLE_OFF',

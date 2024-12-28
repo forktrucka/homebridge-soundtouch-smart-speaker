@@ -1,21 +1,24 @@
 import { SoundTouchDevice } from '../devices/SoundTouch/SoundTouchDevice.js';
-import { PlatformAccessory } from 'homebridge';
+import { PlatformAccessory, type Service } from 'homebridge';
 import { SoundTouchHomebridgePlatform } from '../platform.js';
-import { SoundTouchOnService } from './services/SoundTouchOnService.js';
 import {
   getServiceName,
   ServiceType,
-  SoundTouchService,
+  SoundTouchSpeakerCharacteristic,
 } from './services/ServiceType.js';
-import { SoundTouchInformationService } from './services/SoundTouchInformationService.js';
+import { SoundTouchSpeakerInformationCharacteristic } from './services/SoundTouchSpeakerInformationCharacteristic.js';
 import { FormattedLogger } from '../utils/FormattedLogger.js';
-import { SoundTouchVolumeService } from './services/SoundTouchVolumeService.js';
-import { SoundTouchMuteService } from './services/SoundTouchMuteService.js';
+import { VolumeMode } from '../SoundTouchHomeBridgePlatformConfig.js';
+import { SoundTouchSpeakerMuteCharacteristic } from './services/SoundTouchSpeakerMuteCharacteristic.js';
+import { SoundTouchSpeakerVolumeCharacteristic } from './services/SoundTouchSpeakerVolumeCharacteristic.js';
+import { SoundTouchSpeakerTargetMediaCharacteristic } from './services/SoundTouchSpeakerTargetMediaCharacteristic.js';
+import { SoundTouchSpeakerCurrentMediaCharacteristic } from './services/SoundTouchSpeakerCurrentMediaCharacteristic.js';
+import { SoundTouchSpeakerOnCharacteristic } from './services/SoundTouchSpeakerOnCharacteristic.js';
 
-export type SpeakerType = 'none' | 'lightbulb' | 'speaker';
-
-export class SoundTouchSpeakerPlatformAccessory implements SoundTouchService {
-  private readonly services: SoundTouchService[];
+export class SoundTouchSpeakerPlatformAccessory
+  implements SoundTouchSpeakerCharacteristic
+{
+  private readonly speakerCharacteristics: SoundTouchSpeakerCharacteristic[];
   private readonly device: SoundTouchDevice;
   private readonly log: FormattedLogger;
 
@@ -23,17 +26,17 @@ export class SoundTouchSpeakerPlatformAccessory implements SoundTouchService {
     accessory: PlatformAccessory;
     device: SoundTouchDevice;
     platform: SoundTouchHomebridgePlatform;
-    services: SoundTouchService[];
+    speakerCharacteristics: SoundTouchSpeakerCharacteristic[];
   }) {
     this.device = props.device;
     this.log = FormattedLogger.create(props.platform.log, this.device);
-    this.services = props.services;
+    this.speakerCharacteristics = props.speakerCharacteristics;
   }
 
   async init(): Promise<void> {
-    for (const service of this.services) {
-      if (service.init) {
-        await service.init();
+    for (const speakerCharacteristic of this.speakerCharacteristics) {
+      if (speakerCharacteristic.init) {
+        await speakerCharacteristic.init();
       }
     }
 
@@ -49,9 +52,9 @@ export class SoundTouchSpeakerPlatformAccessory implements SoundTouchService {
   }
 
   async refresh(): Promise<void> {
-    for (const service of this.services) {
-      if (service.refresh) {
-        await service.refresh();
+    for (const speakerCharacteristic of this.speakerCharacteristics) {
+      if (speakerCharacteristic.refresh) {
+        await speakerCharacteristic.refresh();
       }
     }
   }
@@ -66,53 +69,178 @@ export class SoundTouchSpeakerPlatformAccessory implements SoundTouchService {
     }
   }
 
+  static async createAccessory(props: {
+    platform: SoundTouchHomebridgePlatform;
+    accessory: PlatformAccessory;
+    device: SoundTouchDevice;
+    defaultCharacteristics: SoundTouchSpeakerCharacteristic[];
+  }): Promise<SoundTouchSpeakerPlatformAccessory> {
+    const service = SoundTouchSpeakerPlatformAccessory.ensureAccessoryService({
+      serviceType: ServiceType.ON_OFF,
+      service: props.platform.Service.Switch,
+      ...props,
+    });
+
+    const characteristics = [
+      await SoundTouchSpeakerOnCharacteristic.create({
+        service,
+        ...props,
+      }),
+      ...props.defaultCharacteristics,
+    ];
+
+    return new SoundTouchSpeakerPlatformAccessory({
+      speakerCharacteristics: [...characteristics],
+      ...props,
+    });
+  }
+
+  static async createAccessoryWithVolumeControl(props: {
+    platform: SoundTouchHomebridgePlatform;
+    accessory: PlatformAccessory;
+    device: SoundTouchDevice;
+    defaultCharacteristics: SoundTouchSpeakerCharacteristic[];
+  }): Promise<SoundTouchSpeakerPlatformAccessory> {
+
+    const lightBulbService =
+      SoundTouchSpeakerPlatformAccessory.ensureAccessoryService({
+        serviceType: ServiceType.LIGHT_BULB,
+        service: props.platform.Service.Lightbulb,
+        ...props,
+      });
+
+    const characteristics = [
+      await SoundTouchSpeakerOnCharacteristic.create({
+        service: lightBulbService,
+        ...props,
+      }),
+      await SoundTouchSpeakerVolumeCharacteristic.create({
+        service: lightBulbService,
+        speakerType: VolumeMode.lightbulb,
+        ...props,
+      }),
+      ...props.defaultCharacteristics,
+    ];
+
+    return new SoundTouchSpeakerPlatformAccessory({
+      speakerCharacteristics: [...characteristics],
+      ...props,
+    });
+  }
+
+  static async createAccessoryAsSpeaker(props: {
+    platform: SoundTouchHomebridgePlatform;
+    accessory: PlatformAccessory;
+    device: SoundTouchDevice;
+    defaultCharacteristics: SoundTouchSpeakerCharacteristic[];
+  }): Promise<SoundTouchSpeakerPlatformAccessory> {
+    const service = SoundTouchSpeakerPlatformAccessory.ensureAccessoryService({
+      serviceType: ServiceType.SMART_SPEAKER,
+      service: props.platform.Service.SmartSpeaker,
+      ...props,
+    });
+
+    const characteristics = [
+      await SoundTouchSpeakerOnCharacteristic.create({
+        service,
+        ...props,
+      }),
+      await SoundTouchSpeakerMuteCharacteristic.create({
+        service,
+        ...props,
+      }),
+      await SoundTouchSpeakerVolumeCharacteristic.create({
+        service,
+        speakerType: VolumeMode.speaker,
+        ...props,
+      }),
+      await SoundTouchSpeakerTargetMediaCharacteristic.create({
+        service,
+        ...props,
+      }),
+      await SoundTouchSpeakerCurrentMediaCharacteristic.create({
+        service,
+        ...props,
+      }),
+      ...props.defaultCharacteristics,
+    ];
+
+    return new SoundTouchSpeakerPlatformAccessory({
+      speakerCharacteristics: [...characteristics],
+      ...props,
+    });
+  }
+
   static async create(props: {
     platform: SoundTouchHomebridgePlatform;
     accessory: PlatformAccessory;
     device: SoundTouchDevice;
   }): Promise<SoundTouchSpeakerPlatformAccessory> {
+    const speakerType = props.device.volumeSettings.mode;
     const log = FormattedLogger.create(props.platform.log, props.device);
 
-    const speakerService = getServiceName({
-      device: props.device,
-      serviceType: ServiceType.SMART_SPEAKER,
-    });
+    log.debug('creating as a %s', speakerType);
 
-    log.debug('initialising speaker service: %s', speakerService);
-
-    let accessoryService = props.accessory.getService(speakerService);
-
-    if (!accessoryService) {
-      accessoryService = props.accessory.addService(
-        props.platform.Service.SmartSpeaker,
-        speakerService,
-        ServiceType.SMART_SPEAKER
-      );
-    }
-
-    const defaultServices: SoundTouchService[] = [
-      await SoundTouchInformationService.create(props),
-      await SoundTouchOnService.create({
-        service: accessoryService,
-        ...props,
-      }),
-      await SoundTouchVolumeService.create({
-        service: accessoryService,
-        ...props,
-      }),
-      await SoundTouchMuteService.create({
-        service: accessoryService,
-        ...props,
-      }),
+    const defaultCharacteristics: SoundTouchSpeakerCharacteristic[] = [
+      await SoundTouchSpeakerInformationCharacteristic.create(props),
     ];
 
-    const accessory = new SoundTouchSpeakerPlatformAccessory({
-      services: [...defaultServices],
-      ...props,
-    });
+    let accessory: SoundTouchSpeakerPlatformAccessory;
+
+    switch (speakerType) {
+      case VolumeMode.none:
+        accessory = await SoundTouchSpeakerPlatformAccessory.createAccessory({
+          defaultCharacteristics,
+          ...props,
+        });
+        break;
+      case VolumeMode.speaker:
+        accessory =
+          await SoundTouchSpeakerPlatformAccessory.createAccessoryAsSpeaker({
+            defaultCharacteristics,
+            ...props,
+          });
+        break;
+      case VolumeMode.lightbulb:
+        accessory =
+          await SoundTouchSpeakerPlatformAccessory.createAccessoryWithVolumeControl(
+            { defaultCharacteristics, ...props }
+          );
+        break;
+      default:
+        throw new Error('Unhandled volume mode type');
+    }
 
     await accessory.init();
 
     return accessory;
+  }
+
+  private static ensureAccessoryService({
+    device,
+    accessory,
+    serviceType,
+    service,
+  }: {
+    serviceType: ServiceType;
+    accessory: PlatformAccessory;
+    device: SoundTouchDevice;
+    service: typeof Service;
+  }) {
+    const serviceName = getServiceName({
+      device,
+      serviceType,
+    });
+
+    let accessoryService = accessory.getService(serviceName);
+
+    if (!accessoryService) {
+      accessoryService = accessory.addService(
+        service,
+        serviceName,
+        serviceType
+      );
+    }
+    return accessoryService;
   }
 }

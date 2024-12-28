@@ -1,4 +1,4 @@
-import { SoundTouchService } from './ServiceType.js';
+import { SoundTouchSpeakerCharacteristic } from './ServiceType.js';
 import {
   Characteristic,
   CharacteristicValue,
@@ -12,7 +12,9 @@ import { SoundTouchHomebridgePlatform } from '../../platform.js';
 import { FormattedLogger } from '../../utils/FormattedLogger.js';
 import { KeyValue } from '../../devices/SoundTouch/api/index.js';
 
-export class SoundTouchMuteService implements SoundTouchService {
+export class SoundTouchSpeakerMuteCharacteristic
+  implements SoundTouchSpeakerCharacteristic
+{
   private service: Service;
   private platform: SoundTouchHomebridgePlatform;
   private log: FormattedLogger;
@@ -50,9 +52,8 @@ export class SoundTouchMuteService implements SoundTouchService {
 
   async refresh(): Promise<void> {
     const volume = await this.device.api.getVolume();
-    const isMuted = volume?.isMuted ?? false;
     if (volume) {
-      this.characteristic.updateValue(isMuted);
+      this.characteristic.updateValue(volume.isMuted);
     }
   }
 
@@ -68,17 +69,22 @@ export class SoundTouchMuteService implements SoundTouchService {
   }
 
   async setMute(value: CharacteristicValue): Promise<void> {
-    this.log.debug('setting mute status');
-    const unmute = value as boolean;
+    const mute = value as boolean;
     const isOn = await SoundTouchDevice.deviceIsOn(this.device);
 
     if (isOn) {
       const volume = await this.device.api.getVolume();
-      if ((unmute && volume?.isMuted) || (!unmute && !volume?.isMuted)) {
-        this.log.debug(`${unmute ? 'Unmuted' : 'Muted'}`);
-        await this.device.api.pressKey(KeyValue.mute);
+      if (volume) {
+        if ((mute && !volume.isMuted) || (!mute && volume.isMuted)) {
+          this.log.debug(
+            'pressing mute. required: %s. actual: %s',
+            mute,
+            volume.isMuted
+          );
+          await this.device.api.pressKey(KeyValue.mute);
+        }
       }
-    } else if (unmute) {
+    } else if (mute) {
       await this.device.api.pressKey(KeyValue.power);
     }
   }
@@ -89,7 +95,7 @@ export class SoundTouchMuteService implements SoundTouchService {
     platform: SoundTouchHomebridgePlatform;
     service: Service;
   }) {
-    return new SoundTouchMuteService({
+    return new SoundTouchSpeakerMuteCharacteristic({
       log: props.platform.log,
       ...props,
     });
