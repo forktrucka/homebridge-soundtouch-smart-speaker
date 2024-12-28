@@ -1,6 +1,6 @@
 {
   "name": "homebridge-soundtouchspeaker",
-  "displayName": "SoundTouch Smart Speaker",
+  "displayName": "SoundTouch Speaker",
   "type": "module",
   "version": "0.1.2-beta.0",
   "description": "Updates homebridge-soundtouch-platform to work on latest homebridge.",
